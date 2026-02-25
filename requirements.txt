@@ -1,4 +1,6 @@
-pandas
-jupyter
 gspread
 google-auth
+python-dateutil
+pytz
+pandas
+jupyter
