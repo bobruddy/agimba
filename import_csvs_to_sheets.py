@@ -26,6 +26,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import csv
 import sys
+import argparse
 import os
 import glob
 import configparser
@@ -282,39 +283,48 @@ def sort_sheets_alphabetically(workbook):
         workbook.batch_update({"requests": requests})
 
 def main():
+    parser = argparse.ArgumentParser(description="Import CSVs to Google Sheets with formatting and QA.")
+    parser.add_argument('--config-dir', type=str, default='.', help='Directory containing config.ini and credentials.json')
+    parser.add_argument('--csv-dir', type=str, default='/home/ruddy/data/agimba/2025', help='Directory containing CSV files to import')
+    args = parser.parse_args()
+
+    config_dir = args.config_dir
+    config_path = os.path.join(config_dir, 'config.ini')
+    credentials_path = os.path.join(config_dir, 'credentials.json')
+
     # Load config
     cp = configparser.ConfigParser()
-    cp.read('config.ini')
+    cp.read(config_path)
     if 'sheets' not in cp:
-        print("Error: [sheets] section not found in config.ini")
+        print(f"Error: [sheets] section not found in {config_path}")
         sys.exit(1)
     config = dict(cp['sheets'])
-    
-    credentials_file = config.get('credentials', 'credentials.json')
+
+    credentials_file = config.get('credentials', credentials_path)
     scopes = config.get('scopes', 'https://www.googleapis.com/auth/drive').split(',')
-    
+
     if not os.path.exists(credentials_file):
         print(f"Error: Credentials file {credentials_file} not found.")
         sys.exit(1)
-    
+
     client = setup_google_sheets(credentials_file, scopes)
     workbook_name = "2025-2026-volunteers"
     workbook = get_or_create_workbook(client, workbook_name)
-    
-    csv_dir = "/home/ruddy/data/agimba/2025"
+
+    csv_dir = args.csv_dir
     csv_files = glob.glob(os.path.join(csv_dir, "*.csv"))
     if not csv_files:
         print(f"No CSV files found in {csv_dir}")
         return
-    
+
     # Build global email-to-phone map before processing files
     exclude_columns = {'amountpaid', 'slotitemid', 'hastime', 'status', 'starttime', 'startdate', 'phonetype', 'offset', 'endtime', 'itemmemberid', 'signupid', 'signedupdate', 'enddate', 'waitlist'}
     global_email_phone_map = build_global_email_phone_map(csv_dir, exclude_columns)
-    
+
     for csv_file in csv_files:
         import_csv_to_sheet(workbook, csv_file, global_email_phone_map)
         time.sleep(1)  # Delay to avoid quota issues
-    
+
     print(f"All CSVs imported to workbook '{workbook_name}'")
     # Sort sheets alphabetically
     sort_sheets_alphabetically(workbook)
