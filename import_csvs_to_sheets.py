@@ -301,6 +301,9 @@ def main():
     config = dict(cp['sheets'])
 
     credentials_file = config.get('credentials', credentials_path)
+    # If credentials_file is not absolute, resolve relative to config_dir
+    if not os.path.isabs(credentials_file):
+        credentials_file = os.path.join(config_dir, credentials_file)
     scopes = config.get('scopes', 'https://www.googleapis.com/auth/drive').split(',')
 
     if not os.path.exists(credentials_file):
