@@ -320,6 +320,20 @@ def main():
         print(f"No CSV files found in {csv_dir}")
         return
 
+    # Filter out CSV files older than 30 days
+    import datetime
+    cutoff = time.time() - 30 * 86400
+    fresh_files = []
+    for f in csv_files:
+        if os.path.getmtime(f) >= cutoff:
+            fresh_files.append(f)
+        else:
+            print(f"Skipping {os.path.basename(f)} (older than 30 days)")
+    csv_files = fresh_files
+    if not csv_files:
+        print("No CSV files newer than 30 days found.")
+        return
+
     # Build global email-to-phone map before processing files
     exclude_columns = {'amountpaid', 'slotitemid', 'hastime', 'status', 'starttime', 'startdate', 'phonetype', 'offset', 'endtime', 'itemmemberid', 'signupid', 'signedupdate', 'enddate', 'waitlist'}
     global_email_phone_map = build_global_email_phone_map(csv_dir, exclude_columns)
