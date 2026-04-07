@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='agimba-tools',
     version='1.0.0',
-    py_modules=['import_csvs_to_sheets'],
+    py_modules=['import_csvs_to_sheets', 'percussion_volunteer_list'],
     install_requires=[
         'gspread',
         'google-auth',
@@ -13,6 +13,7 @@ setup(
     entry_points={
         'console_scripts': [
             'import_csvs_to_sheets=import_csvs_to_sheets:main',
+            'percussion_volunteer_list=percussion_volunteer_list:main',
         ],
     },
     author='Robert Ruddy',
