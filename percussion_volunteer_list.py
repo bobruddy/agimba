@@ -165,13 +165,21 @@ def main():
     try:
         dest_ws = dest_wb.worksheet(tab_name)
         dest_ws.clear()
-        # Remove existing banding (so we can re-apply cleanly)
-        sheet_meta = dest_ws.fetch_sheet_metadata()
+        # Remove existing banding/filter views for this sheet (re-apply cleanly)
+        wb_meta = dest_wb.fetch_sheet_metadata()
+        sheet_meta = {}
+        for sheet in wb_meta.get('sheets', []):
+            props = sheet.get('properties', {})
+            if props.get('sheetId') == dest_ws.id:
+                sheet_meta = sheet
+                break
+
         banded = sheet_meta.get('bandedRanges', [])
         if banded:
             dest_wb.batch_update({"requests": [
                 {"deleteBanding": {"bandedRangeId": b['bandedRangeId']}} for b in banded
             ]})
+
         # Remove existing filter views
         filter_views = sheet_meta.get('filterViews', [])
         if filter_views:
